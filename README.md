@@ -25,6 +25,7 @@ Image Comparison:
 ### Install :
 
 - go get github.com/go-gl/gl
+- brew install homebrew/versions/glfw3 (MAC only)
 - go get github.com/go-gl/glfw3
 - go get github.com/aubonbeurre/goicmpgl
 
