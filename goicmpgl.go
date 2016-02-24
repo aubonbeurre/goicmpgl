@@ -7,7 +7,7 @@ package main
 import (
 	"fmt"
 	gl "github.com/go-gl/gl/v4.1-core/gl"
-	glfw "github.com/go-gl/glfw3/v3.0/glfw"
+	glfw "github.com/go-gl/glfw3/v3.1/glfw"
 	"github.com/jessevdk/go-flags"
 	"image"
 	"image/color"
@@ -236,8 +236,8 @@ func fbColor(xtex float32, ytex float32) (col color.Color) {
 }
 
 func mouseDownCallback(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
-	var xpos, ypos float64 = w.GetCursorPosition()
-	gMouseX, gMouseY = winToFb(xpos, ypos)
+	//var xpos, ypos float64 = w.GetCursorPosition()
+	//gMouseX, gMouseY = winToFb(xpos, ypos)
 
 	if action == glfw.Press {
 		gMouseDown = true
@@ -313,12 +313,12 @@ func main() {
 	gDiffFlag = len(args) == 2
 
 	// make sure that we display any errors that are encountered
-	glfw.SetErrorCallback(errorCallback)
+	//glfw.SetErrorCallback(errorCallback)
 
 	// the GLFW library has to be initialized before any of the methods
 	// can be invoked
-	if !glfw.Init() {
-		panic("Can't init glfw!")
+	if err = glfw.Init(); err != nil {
+		panic(err)
 	}
 
 	// to be tidy, make sure glfw.Terminate() is called at the end of
@@ -334,8 +334,8 @@ func main() {
 	// request a OpenGL 4.1 core context
 	glfw.WindowHint(glfw.ContextVersionMajor, 4)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
-	glfw.WindowHint(glfw.OpenglForwardCompatible, glfw.True)
-	glfw.WindowHint(glfw.OpenglProfile, glfw.OpenglCoreProfile)
+	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 
 	// do the actual window creation
 	var window *glfw.Window
@@ -350,7 +350,7 @@ func main() {
 	window.SetKeyCallback(keyCallback)
 	window.SetMouseButtonCallback(mouseDownCallback)
 	window.SetScrollCallback(mouseWheelCallback)
-	window.SetCursorPositionCallback(mouseMoveCallback)
+	window.SetCursorPosCallback(mouseMoveCallback)
 
 	// GLFW3 can work with more than one window, so make sure we set our
 	// new window as the current context to operate on
