@@ -2,7 +2,7 @@ package main
 
 // speed-up compilation:
 // go install -a github.com/go-gl/gl/v4.1-core/gl
-// go install -a github.com/go-gl/glfw3/v3.0/glfw
+// go install -a github.com/go-gl/glfw3/v3.1/glfw
 
 import (
 	"fmt"

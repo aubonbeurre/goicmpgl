@@ -104,9 +104,12 @@ func GetShaderInfoLog(shader uint32) string {
 }
 
 func ShaderSource(shader uint32, src string) {
-	var srcArray []uint8 = StringToArray(src)
-	var ptr *uint8 = &srcArray[0]
-	gl.ShaderSource(shader, 1, &ptr, nil)
+	//var srcArray []uint8 = StringToArray(src)
+	//var ptr *uint8 = &srcArray[0]
+	src += "\x00"
+	csources, free := gl.Strs(src)
+	gl.ShaderSource(shader, 1, csources, nil)
+	free()
 }
 
 // loads shader objects and then attaches them to a program
