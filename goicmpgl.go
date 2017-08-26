@@ -6,9 +6,6 @@ package main
 
 import (
 	"fmt"
-	gl "github.com/go-gl/gl/v4.1-core/gl"
-	glfw "github.com/go-gl/glfw3/v3.1/glfw"
-	"github.com/jessevdk/go-flags"
 	"image"
 	"image/color"
 	"io"
@@ -18,6 +15,11 @@ import (
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/aubonbeurre/glplus"
+	gl "github.com/go-gl/gl/v4.1-core/gl"
+	glfw "github.com/go-gl/glfw3/v3.2/glfw"
+	"github.com/jessevdk/go-flags"
 )
 
 var (
@@ -50,7 +52,7 @@ var (
     colourOut = col0;
   }`
 
-	S_FragmentShader_Grid = `#version 330
+	sFragmentShaderGrid = `#version 330
   uniform vec4 color1;
   uniform vec4 color2;
   uniform vec3 grid;
@@ -68,12 +70,12 @@ var (
   	colourOut = color1 * evenodd + (1 - evenodd) * color2;
   }`
 
-	gOffX        float32 = 0 // texture coordinates
-	gOffY        float32 = 0
-	gMouseX      float32 = 0 // framebuffer coordinates
-	gMouseY      float32 = 0
-	gMouseDown   bool    = false
-	gHelp        bool    = true
+	gOffX        float32 // texture coordinates
+	gOffY        float32
+	gMouseX      float32 // framebuffer coordinates
+	gMouseY      float32
+	gMouseDown           = false
+	gHelp                = true
 	gZoom        float32 = 1
 	gBlend       float32 = 1
 	gRetinaScale float32 = 1
@@ -81,7 +83,7 @@ var (
 	gImage1 image.Image
 	gImage2 image.Image
 
-	gDiffFlag bool = false
+	gDiffFlag = false
 
 	sProgram2Src = `#version 330
   in vec4 out_pos;
@@ -243,7 +245,7 @@ func mouseDownCallback(w *glfw.Window, button glfw.MouseButton, action glfw.Acti
 		gMouseDown = true
 
 		var xtex, ytex float32 = fbToTex(gMouseX, gMouseY)
-		var col color.Color = fbColor(xtex, ytex)
+		var col = fbColor(xtex, ytex)
 
 		var r, g, b, a uint32 = col.RGBA()
 		fmt.Printf("X,Y: %.2f %.2f RGBA: 0x%x 0x%x 0x%x 0x%x\n", xtex, ytex, r, g, b, a)
@@ -277,24 +279,24 @@ func mouseWheelCallback(w *glfw.Window, xoff float64, yoff float64) {
 	}
 }
 
-func downloadImage(url string) (err error, path string) {
+func downloadImage(url string) (path string, err error) {
 	var f *os.File
 	if f, err = ioutil.TempFile("", ""); err != nil {
-		return err, ""
+		return "", err
 	}
 
 	var resp *http.Response
 	if resp, err = http.Get(url); err != nil {
-		return err, ""
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	if _, err = io.Copy(f, resp.Body); err != nil {
-		return err, ""
+		return "", err
 	}
 
 	f.Close()
-	return nil, f.Name()
+	return f.Name(), nil
 }
 
 func main() {
@@ -369,71 +371,71 @@ func main() {
 		panic(err)
 	}
 
-	var attribs []string = []string{
+	var attribs = []string{
 		"position",
 		"uvs",
 	}
 
 	// compile our shaders
-	var progTex0 *Program
-	if progTex0, err = LoadShaderProgram(vertShader, fragShaderTex0, attribs); err != nil {
+	var progTex0 *glplus.Program
+	if progTex0, err = glplus.LoadShaderProgram(vertShader, fragShaderTex0, attribs); err != nil {
 		panic(err)
 	}
 	defer progTex0.DeleteProgram()
 
-	var progGrid *Program
-	if progGrid, err = LoadShaderProgram(vertShader, S_FragmentShader_Grid, attribs); err != nil {
+	var progGrid *glplus.Program
+	if progGrid, err = glplus.LoadShaderProgram(vertShader, sFragmentShaderGrid, attribs); err != nil {
 		panic(err)
 	}
 	defer progGrid.DeleteProgram()
 
-	var diffProg2 *Program
-	if diffProg2, err = LoadShaderProgram(vertShader, sProgram2Src, attribs); err != nil {
+	var diffProg2 *glplus.Program
+	if diffProg2, err = glplus.LoadShaderProgram(vertShader, sProgram2Src, attribs); err != nil {
 		panic(err)
 	}
 	defer diffProg2.DeleteProgram()
 
-	var diffProg3 *Program
-	if diffProg3, err = LoadShaderProgram(vertShader, sProgram3Src, attribs); err != nil {
+	var diffProg3 *glplus.Program
+	if diffProg3, err = glplus.LoadShaderProgram(vertShader, sProgram3Src, attribs); err != nil {
 		panic(err)
 	}
 	defer diffProg3.DeleteProgram()
 
-	var diffProg4 *Program
-	if diffProg4, err = LoadShaderProgram(vertShader, sProgram4Src, attribs); err != nil {
+	var diffProg4 *glplus.Program
+	if diffProg4, err = glplus.LoadShaderProgram(vertShader, sProgram4Src, attribs); err != nil {
 		panic(err)
 	}
 	defer diffProg4.DeleteProgram()
 
-	var diffProg5 *Program
-	if diffProg5, err = LoadShaderProgram(vertShader, sProgram5Src, attribs); err != nil {
+	var diffProg5 *glplus.Program
+	if diffProg5, err = glplus.LoadShaderProgram(vertShader, sProgram5Src, attribs); err != nil {
 		panic(err)
 	}
 	defer diffProg5.DeleteProgram()
 
-	var image1_path string = args[0]
-	if strings.HasPrefix(image1_path, "http") {
-		if err, image1_path = downloadImage(image1_path); err != nil {
+	var image1path = args[0]
+	if strings.HasPrefix(image1path, "http") {
+		if image1path, err = downloadImage(image1path); err != nil {
 			panic(err)
 		}
 	}
 
-	var texture *Texture
-	if err, texture, gImage1 = NewTexture(image1_path, false); err != nil {
+	var texture *glplus.Texture
+	if texture, gImage1, err = glplus.NewTexture(image1path, false, false); err != nil {
 		panic(err)
 	}
 	defer texture.DeleteTexture()
 
-	var texture2 *Texture
+	var texture2 *glplus.Texture
 	if gDiffFlag {
-		var image2_path string = args[1]
-		if strings.HasPrefix(image2_path, "http") {
-			if err, image2_path = downloadImage(image2_path); err != nil {
+		var image2path = args[1]
+		if strings.HasPrefix(image2path, "http") {
+			if image2path, err = downloadImage(image2path); err != nil {
 				panic(err)
 			}
 		}
 
-		if err, texture2, gImage2 = NewTexture(image2_path, false); err != nil {
+		if texture2, gImage2, err = glplus.NewTexture(image2path, false, false); err != nil {
 			panic(err)
 		}
 		defer texture2.DeleteTexture()
@@ -447,40 +449,38 @@ func main() {
 		fmt.Printf("image dimensions: %dx%d\n", texture.Size.X, texture.Size.Y)
 	}
 
-	var font *Font
-	if err, font = NewFont("Font.png", 16); err != nil {
+	var font *glplus.Font
+	if font, err = glplus.NewFont(16); err != nil {
 		panic(err)
 	}
 	defer font.DeleteFont()
 
-	var help1 *String = font.NewString("1: show only A")
+	var help1 = font.NewString("1: show only A")
 	defer help1.DeleteString()
-	var help2 *String = font.NewString("2: show only B")
+	var help2 = font.NewString("2: show only B")
 	defer help2.DeleteString()
-	var help3 *String = font.NewString("3: show diff A&B")
+	var help3 = font.NewString("3: show diff A&B")
 	defer help3.DeleteString()
-	var helph *String = font.NewString("h: toggle this help")
+	var helph = font.NewString("h: toggle this help")
 	defer helph.DeleteString()
-	var helparrows *String = font.NewString("<up>,<down>: go from A to B")
+	var helparrows = font.NewString("<up>,<down>: go from A to B")
 	defer helparrows.DeleteString()
-	var helpzoom *String = font.NewString("[]: zoom in/out (also mouse wheel)")
+	var helpzoom = font.NewString("[]: zoom in/out (also mouse wheel)")
 	defer helpzoom.DeleteString()
-	var helpclear *String = font.NewString("Z: reset zoom/view")
+	var helpclear = font.NewString("Z: reset zoom/view")
 	defer helpclear.DeleteString()
-	var helpescape *String = font.NewString("ESC: quit")
+	var helpescape = font.NewString("ESC: quit")
 	defer helpescape.DeleteString()
 
-	var vbo *VBO
-	if vbo, err = NewVBOQuad(0, 0, float32(texture.Size.X), float32(texture.Size.Y)); err != nil {
-		panic(err)
-	}
+	var vbo *glplus.VBO
+	vbo = glplus.NewVBOQuad(0, 0, float32(texture.Size.X), float32(texture.Size.Y))
 	defer vbo.DeleteVBO()
 
-	var cnt float32 = 0
+	var cnt float32
 
 	// while there's no request to close the window
 	for !window.ShouldClose() {
-		cnt += 1
+		cnt++
 
 		// get the texture of the window because it may have changed since creation
 		width, height := window.GetFramebufferSize()
@@ -493,7 +493,8 @@ func main() {
 			cnt = 0
 		}
 
-		var matrix Matrix2x3 = IdentityMatrix2x3()
+		var matrix glplus.Matrix2x3
+		matrix = glplus.IdentityMatrix2x3()
 		matrix = matrix.Translate(-1.0, 1.0)
 		matrix = matrix.Scale(2.0/float32(width), -2.0/float32(height))
 
@@ -506,7 +507,8 @@ func main() {
 		gl.BlendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
 		gl.BlendEquation(gl.FUNC_ADD)
 
-		var matrix3 Matrix2x3 = matrix.Scale(gZoom, gZoom)
+		var matrix3 glplus.Matrix2x3
+		matrix3 = matrix.Scale(gZoom, gZoom)
 		matrix3 = matrix3.Translate(gOffX, gOffY)
 
 		// draw the grid
@@ -553,9 +555,9 @@ func main() {
 			progTex0.UnuseProgram()
 			texture.UnbindTexture(0)
 		} else {
-			var diffBlend float32 = gBlend
+			var diffBlend = gBlend
 
-			var diffProg *Program
+			var diffProg *glplus.Program
 
 			if diffBlend < 0.25 {
 				diffBlend *= 4
@@ -597,25 +599,24 @@ func main() {
 		if gHelp {
 			color := [...]float32{0, 0, 1, 1}
 			bg := [...]float32{0.5, 0.5, 0.5, 0.5}
-			var line float32 = 0
+			var line float32
 			if err = helph.Draw(font, color, bg, matrix, 0.5, 20, 100+line*128); err != nil {
 				panic(err)
 			}
-			line += 1
+			line++
 			help1.Draw(font, color, bg, matrix, 0.5, 20, 100+line*128)
-			line += 1
+			line++
 			help2.Draw(font, color, bg, matrix, 0.5, 20, 100+line*128)
-			line += 1
+			line++
 			help3.Draw(font, color, bg, matrix, 0.5, 20, 100+line*128)
-			line += 1
+			line++
 			helparrows.Draw(font, color, bg, matrix, 0.5, 20, 100+line*128)
-			line += 1
+			line++
 			helpzoom.Draw(font, color, bg, matrix, 0.5, 20, 100+line*128)
-			line += 1
+			line++
 			helpclear.Draw(font, color, bg, matrix, 0.5, 20, 100+line*128)
-			line += 1
+			line++
 			helpescape.Draw(font, color, bg, matrix, 0.5, 20, 100+line*128)
-			line += 1
 		}
 
 		// swapping OpenGL buffers and polling events has been decoupled
