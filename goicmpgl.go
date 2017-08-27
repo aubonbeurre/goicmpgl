@@ -450,7 +450,7 @@ func main() {
 	}
 
 	var font *glplus.Font
-	if font, err = glplus.NewFont(16); err != nil {
+	if font, err = glplus.NewFont("FreeSerif.ttf"); err != nil {
 		panic(err)
 	}
 	defer font.DeleteFont()
