@@ -19,6 +19,7 @@ import (
 	"github.com/aubonbeurre/glplus"
 	gl "github.com/go-gl/gl/v4.1-core/gl"
 	glfw "github.com/go-gl/glfw3/v3.2/glfw"
+	"github.com/go-gl/mathgl/mgl32"
 	"github.com/jessevdk/go-flags"
 )
 
@@ -29,12 +30,11 @@ var (
   in vec2 uvs;
   out vec4 out_pos;
   out vec2 out_uvs;
-  uniform mat4 ModelviewMatrix;
+  uniform mat3 ModelviewMatrix;
   void main()
   {
-      out_pos = ModelviewMatrix * position;
-      gl_Position = out_pos;
-      out_uvs = uvs;
+		gl_Position = vec4(ModelviewMatrix * vec3(position.xy, 1.0), 0.0).xywz;
+  	out_uvs = uvs;
   }`
 
 	// fragment shader
@@ -493,10 +493,8 @@ func main() {
 			cnt = 0
 		}
 
-		var matrix glplus.Matrix2x3
-		matrix = glplus.IdentityMatrix2x3()
-		matrix = matrix.Translate(-1.0, 1.0)
-		matrix = matrix.Scale(2.0/float32(width), -2.0/float32(height))
+		var matrix = mgl32.Translate2D(-1, 1)
+		matrix = matrix.Mul3(mgl32.Scale2D(2.0/float32(width), -2.0/float32(height)))
 
 		// clear it all out
 		gl.Viewport(0, 0, int32(width), int32(height))
@@ -507,9 +505,8 @@ func main() {
 		gl.BlendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
 		gl.BlendEquation(gl.FUNC_ADD)
 
-		var matrix3 glplus.Matrix2x3
-		matrix3 = matrix.Scale(gZoom, gZoom)
-		matrix3 = matrix3.Translate(gOffX, gOffY)
+		var matrix3 = matrix.Mul3(mgl32.Scale2D(gZoom, gZoom))
+		matrix3 = matrix3.Mul3(mgl32.Translate2D(gOffX, gOffY))
 
 		// draw the grid
 		if true {
@@ -520,7 +517,7 @@ func main() {
 			color2 := [4]float32{.9, .9, .9, 1}
 			grid := [3]float32{float32(texture.Size.X), float32(texture.Size.Y), 8 / gZoom}
 			//fmt.Printf("%.2f %.2f %.2f %.2f\n", grid[0], grid[1], grid[2], grid[3])
-			progGrid.ProgramUniformMatrix4fv("ModelviewMatrix", matrix3.Array())
+			progGrid.ProgramUniformMatrix3fv("ModelviewMatrix", matrix3)
 			progGrid.ProgramUniform4fv("color1", color1)
 			progGrid.ProgramUniform4fv("color2", color2)
 			progGrid.ProgramUniform3fv("grid", grid)
@@ -541,7 +538,7 @@ func main() {
 			progTex0.UseProgram()
 			texture.BindTexture(0)
 
-			progTex0.ProgramUniformMatrix4fv("ModelviewMatrix", matrix3.Array())
+			progTex0.ProgramUniformMatrix3fv("ModelviewMatrix", matrix3)
 			progTex0.ProgramUniform1i("tex1", 0)
 			progTex0.ProgramUniform1f("blend", gBlend)
 
@@ -578,7 +575,7 @@ func main() {
 			texture.BindTexture(0)
 			texture2.BindTexture(1)
 
-			diffProg.ProgramUniformMatrix4fv("ModelviewMatrix", matrix3.Array())
+			diffProg.ProgramUniformMatrix3fv("ModelviewMatrix", matrix3)
 			diffProg.ProgramUniform1i("decalA", 0)
 			diffProg.ProgramUniform1i("decalB", 1)
 			diffProg.ProgramUniform1f("diffBlend", diffBlend)
