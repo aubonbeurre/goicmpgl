@@ -421,7 +421,7 @@ func main() {
 	}
 
 	var texture *glplus.Texture
-	if texture, gImage1, err = glplus.NewTexture(image1path, false, false); err != nil {
+	if texture, gImage1, err = glplus.LoadTexture(image1path, false, false); err != nil {
 		panic(err)
 	}
 	defer texture.DeleteTexture()
@@ -435,7 +435,7 @@ func main() {
 			}
 		}
 
-		if texture2, gImage2, err = glplus.NewTexture(image2path, false, false); err != nil {
+		if texture2, gImage2, err = glplus.LoadTexture(image2path, false, false); err != nil {
 			panic(err)
 		}
 		defer texture2.DeleteTexture()
