@@ -17,7 +17,6 @@ import (
 	"strings"
 
 	"github.com/aubonbeurre/glplus"
-	gl "github.com/go-gl/gl/v4.1-core/gl"
 	glfw "github.com/go-gl/glfw3/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/jessevdk/go-flags"
@@ -368,6 +367,7 @@ func main() {
 
 	// make sure that GLEW initializes all of the GL functions
 	glplus.Gl = glplus.NewContext()
+	Gl := glplus.Gl
 
 	var attribs = []string{
 		"position",
@@ -495,13 +495,13 @@ func main() {
 		matrix = matrix.Mul3(mgl32.Scale2D(2.0/float32(width), -2.0/float32(height)))
 
 		// clear it all out
-		gl.Viewport(0, 0, int32(width), int32(height))
-		gl.ClearColor(0.0, 0.0, 0.0, 1.0)
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+		Gl.Viewport(0, 0, width, height)
+		Gl.ClearColor(0.0, 0.0, 0.0, 1.0)
+		Gl.Clear(Gl.COLOR_BUFFER_BIT | Gl.DEPTH_BUFFER_BIT)
 
-		gl.Enable(gl.BLEND)
-		gl.BlendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-		gl.BlendEquation(gl.FUNC_ADD)
+		Gl.Enable(Gl.BLEND)
+		Gl.BlendFunc(Gl.ONE, Gl.ONE_MINUS_SRC_ALPHA)
+		Gl.BlendEquation(Gl.FUNC_ADD)
 
 		var matrix3 = matrix.Mul3(mgl32.Scale2D(gZoom, gZoom))
 		matrix3 = matrix3.Mul3(mgl32.Translate2D(gOffX, gOffY))
