@@ -2,7 +2,7 @@ package main
 
 // speed-up compilation:
 // go install -a github.com/go-gl/gl/v4.1-core/gl
-// go install -a github.com/go-gl/glfw3/v3.1/glfw
+// go install -a github.com/go-gl/glfw3/v3.2/glfw
 
 import (
 	"fmt"
@@ -367,9 +367,7 @@ func main() {
 	//glfw.SwapInterval(0)
 
 	// make sure that GLEW initializes all of the GL functions
-	if err = gl.Init(); err != nil {
-		panic(err)
-	}
+	glplus.Gl = glplus.NewContext()
 
 	var attribs = []string{
 		"position",
