@@ -447,8 +447,13 @@ func main() {
 		fmt.Printf("image dimensions: %dx%d\n", texture.Size.X, texture.Size.Y)
 	}
 
+	var fontReader *os.File
 	var font *glplus.Font
-	if font, err = glplus.NewFont("FreeSerif.ttf"); err != nil {
+	if fontReader, err = glplus.FreeSerif(); err != nil {
+		panic(err)
+	}
+	defer fontReader.Close()
+	if font, err = glplus.NewFont(fontReader); err != nil {
 		panic(err)
 	}
 	defer font.DeleteFont()
