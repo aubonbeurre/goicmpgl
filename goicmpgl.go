@@ -375,37 +375,37 @@ func main() {
 	}
 
 	// compile our shaders
-	var progTex0 *glplus.Program
+	var progTex0 *glplus.GPProgram
 	if progTex0, err = glplus.LoadShaderProgram(vertShader, fragShaderTex0, attribs); err != nil {
 		panic(err)
 	}
 	defer progTex0.DeleteProgram()
 
-	var progGrid *glplus.Program
+	var progGrid *glplus.GPProgram
 	if progGrid, err = glplus.LoadShaderProgram(vertShader, sFragmentShaderGrid, attribs); err != nil {
 		panic(err)
 	}
 	defer progGrid.DeleteProgram()
 
-	var diffProg2 *glplus.Program
+	var diffProg2 *glplus.GPProgram
 	if diffProg2, err = glplus.LoadShaderProgram(vertShader, sProgram2Src, attribs); err != nil {
 		panic(err)
 	}
 	defer diffProg2.DeleteProgram()
 
-	var diffProg3 *glplus.Program
+	var diffProg3 *glplus.GPProgram
 	if diffProg3, err = glplus.LoadShaderProgram(vertShader, sProgram3Src, attribs); err != nil {
 		panic(err)
 	}
 	defer diffProg3.DeleteProgram()
 
-	var diffProg4 *glplus.Program
+	var diffProg4 *glplus.GPProgram
 	if diffProg4, err = glplus.LoadShaderProgram(vertShader, sProgram4Src, attribs); err != nil {
 		panic(err)
 	}
 	defer diffProg4.DeleteProgram()
 
-	var diffProg5 *glplus.Program
+	var diffProg5 *glplus.GPProgram
 	if diffProg5, err = glplus.LoadShaderProgram(vertShader, sProgram5Src, attribs); err != nil {
 		panic(err)
 	}
@@ -418,13 +418,13 @@ func main() {
 		}
 	}
 
-	var texture *glplus.Texture
+	var texture *glplus.GPTexture
 	if texture, gImage1, err = glplus.LoadTexture(image1path, false, false); err != nil {
 		panic(err)
 	}
 	defer texture.DeleteTexture()
 
-	var texture2 *glplus.Texture
+	var texture2 *glplus.GPTexture
 	if gDiffFlag {
 		var image2path = args[1]
 		if strings.HasPrefix(image2path, "http") {
@@ -447,8 +447,13 @@ func main() {
 		fmt.Printf("image dimensions: %dx%d\n", texture.Size.X, texture.Size.Y)
 	}
 
+	var fontReader *os.File
 	var font *glplus.Font
-	if font, err = glplus.NewFont("FreeSerif.ttf"); err != nil {
+	if fontReader, err = glplus.FreeSerif(); err != nil {
+		panic(err)
+	}
+	defer fontReader.Close()
+	if font, err = glplus.NewFont(fontReader); err != nil {
 		panic(err)
 	}
 	defer font.DeleteFont()
@@ -471,7 +476,7 @@ func main() {
 	defer helpescape.DeleteString()
 
 	var vbo *glplus.VBO
-	vbo = glplus.NewVBOQuad(0, 0, float32(texture.Size.X), float32(texture.Size.Y))
+	vbo = glplus.NewVBOQuad(progGrid, 0, 0, float32(texture.Size.X), float32(texture.Size.Y))
 	defer vbo.DeleteVBO()
 
 	var cnt float32
@@ -508,7 +513,7 @@ func main() {
 
 		// draw the grid
 		if true {
-			vbo.Bind()
+			vbo.Bind(progGrid)
 			progGrid.UseProgram()
 
 			color1 := [4]float32{.4, .4, .4, 1}
@@ -526,13 +531,13 @@ func main() {
 
 			vbo.Draw()
 
-			vbo.Unbind()
+			vbo.Unbind(progGrid)
 			progGrid.UnuseProgram()
 		}
 
 		// draw the texture
 		if !gDiffFlag {
-			vbo.Bind()
+			vbo.Bind(progTex0)
 			progTex0.UseProgram()
 			texture.BindTexture(0)
 
@@ -546,13 +551,13 @@ func main() {
 
 			vbo.Draw()
 
-			vbo.Unbind()
+			vbo.Unbind(progTex0)
 			progTex0.UnuseProgram()
 			texture.UnbindTexture(0)
 		} else {
 			var diffBlend = gBlend
 
-			var diffProg *glplus.Program
+			var diffProg *glplus.GPProgram
 
 			if diffBlend < 0.25 {
 				diffBlend *= 4
@@ -568,7 +573,7 @@ func main() {
 				diffProg = diffProg3
 			}
 
-			vbo.Bind()
+			vbo.Bind(diffProg)
 			diffProg.UseProgram()
 			texture.BindTexture(0)
 			texture2.BindTexture(1)
@@ -584,7 +589,7 @@ func main() {
 
 			vbo.Draw()
 
-			vbo.Unbind()
+			vbo.Unbind(diffProg)
 			diffProg.UnuseProgram()
 			texture.UnbindTexture(0)
 			texture2.UnbindTexture(1)
