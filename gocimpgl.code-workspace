@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "..\\glplus"
+		},
+		{
+			"path": "..\\go-obj"
+		}
+	],
+	"settings": {}
+}
