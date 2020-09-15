@@ -8,6 +8,12 @@
 		},
 		{
 			"path": "..\\go-obj"
+		},
+		{
+			"path": "..\\minieng"
+		},
+		{
+			"path": "..\\terrain"
 		}
 	],
 	"settings": {}
